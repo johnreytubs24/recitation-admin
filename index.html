@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1f6feb">
+  <title>Recitation Admin</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f6f9;
+      color: #1f2937;
+    }
+
+    .app {
+      max-width: 760px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: white;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #1f6feb;
+      color: white;
+      padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .subtitle {
+      margin: 3px 0 0;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 14px;
+    }
+
+    input,
+    select,
+    button {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 16px;
+      border-radius: 6px;
+    }
+
+    input,
+    select {
+      min-height: 46px;
+      padding: 10px 11px;
+      border: 1px solid #cbd5e1;
+      margin-bottom: 10px;
+      background: white;
+    }
+
+    button {
+      min-height: 46px;
+      padding: 11px;
+      border: 0;
+      background: #1f6feb;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #e2e8f0;
+      color: #1f2937;
+    }
+
+    button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .panel {
+      border-top: 1px solid #e5e7eb;
+      padding-top: 14px;
+      margin-top: 14px;
+    }
+
+    .panel:first-child {
+      border-top: 0;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    .panel-title {
+      margin: 0 0 10px;
+      color: #334155;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+
+    .filter-row button {
+      width: 130px;
+    }
+
+    #result {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: bold;
+      text-align: center;
+      white-space: pre-line;
+    }
+
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .loading {
+      background: #e2e3e5;
+      color: #383d41;
+      border: 1px solid #d6d8db;
+    }
+
+    .student-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+      padding-bottom: 22px;
+    }
+
+    .student-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 7px;
+      background: #f8fafc;
+      cursor: pointer;
+    }
+
+    .student-card:active {
+      background: #eef4ff;
+    }
+
+    .student-name {
+      font-weight: bold;
+      color: #1f2937;
+      line-height: 1.3;
+    }
+
+    .student-meta {
+      color: #64748b;
+      font-size: 13px;
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    .points {
+      font-weight: bold;
+      color: #155724;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .empty {
+      text-align: center;
+      color: #64748b;
+      padding: 18px 8px;
+    }
+
+    @media (max-width: 560px) {
+      .actions,
+      .filter-row {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-row button {
+        width: 100%;
+      }
+
+      .student-card {
+        grid-template-columns: 1fr;
+      }
+
+      .points {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <h1>Recitation Admin</h1>
+      <p class="subtitle">Add, edit, and view students by section</p>
+    </header>
+
+    <section class="content">
+      <div class="panel">
+        <input type="password" id="pin" placeholder="Teacher PIN">
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">Add / Edit Student</p>
+        <input type="text" id="studentId" placeholder="Student ID">
+        <input type="text" id="fullName" placeholder="Full Name">
+        <input type="text" id="section" placeholder="Section">
+        <div class="actions">
+          <button id="addButton" type="button">Add Student</button>
+          <button id="editButton" class="secondary" type="button">Save Edit</button>
+        </div>
+      </div>
+
+      <div id="result"></div>
+
+      <div class="panel">
+        <p class="panel-title">Students</p>
+        <div class="filter-row">
+          <select id="sectionFilter">
+            <option value="">All sections</option>
+          </select>
+          <button id="refreshButton" class="secondary" type="button">Refresh</button>
+        </div>
+        <div id="studentList" class="student-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const ADMIN_API_URL = "https://script.google.com/macros/s/AKfycbxDHqgF2RrUZAYVBmw88VGPSkPzIE-XhWzARaBmlKUyi3mI0ELthCNLks1W3SBwSkYivQ/exec";
+
+    const pinInput = document.getElementById("pin");
+    const studentIdInput = document.getElementById("studentId");
+    const fullNameInput = document.getElementById("fullName");
+    const sectionInput = document.getElementById("section");
+    const addButton = document.getElementById("addButton");
+    const editButton = document.getElementById("editButton");
+    const refreshButton = document.getElementById("refreshButton");
+    const sectionFilter = document.getElementById("sectionFilter");
+    const studentList = document.getElementById("studentList");
+    const resultDiv = document.getElementById("result");
+
+    function showResult(type, message) {
+      resultDiv.style.display = "block";
+      resultDiv.className = type;
+      resultDiv.innerText = message;
+    }
+
+    function setBusy(isBusy) {
+      addButton.disabled = isBusy;
+      editButton.disabled = isBusy;
+      refreshButton.disabled = isBusy;
+    }
+
+    function getPin() {
+      const pin = pinInput.value.trim();
+
+      if (!pin) {
+        showResult("error", "Enter teacher PIN first.");
+        pinInput.focus();
+      }
+
+      return pin;
+    }
+
+    function callBackend(params) {
+      return new Promise((resolve, reject) => {
+        const callbackName = "adminCallback_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+        const script = document.createElement("script");
+        const query = new URLSearchParams();
+
+        Object.keys(params).forEach((key) => {
+          query.set(key, params[key]);
+        });
+
+        query.set("callback", callbackName);
+        query.set("pin", pinInput.value.trim());
+
+        const timeoutId = setTimeout(() => {
+          cleanup();
+          reject(new Error("Backend request timed out."));
+        }, 10000);
+
+        function cleanup() {
+          clearTimeout(timeoutId);
+          delete window[callbackName];
+          script.remove();
+        }
+
+        window[callbackName] = (data) => {
+          cleanup();
+          resolve(data);
+        };
+
+        script.onerror = () => {
+          cleanup();
+          reject(new Error("Could not reach admin backend."));
+        };
+
+        script.src = ADMIN_API_URL + "?" + query.toString();
+        document.body.appendChild(script);
+      });
+    }
+
+    async function runAdminAction(params) {
+      if (ADMIN_API_URL.includes("PASTE_ADMIN")) {
+        showResult("error", "Set ADMIN_API_URL first.");
+        return null;
+      }
+
+      if (!getPin()) {
+        return null;
+      }
+
+      setBusy(true);
+      showResult("loading", "Working...");
+
+      try {
+        const data = await callBackend(params);
+        showResult(data.status === "success" ? "success" : "error", data.message || "Done.");
+        return data;
+      } catch (error) {
+        showResult("error", "System Error: " + error.message);
+        return null;
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function loadSections() {
+      const data = await runAdminAction({ action: "listSections" });
+
+      if (!data || data.status !== "success") return;
+
+      const currentValue = sectionFilter.value;
+      sectionFilter.innerHTML = '<option value="">All sections</option>';
+
+      data.sections.forEach((sectionName) => {
+        const option = document.createElement("option");
+        option.value = sectionName;
+        option.innerText = sectionName;
+        sectionFilter.appendChild(option);
+      });
+
+      sectionFilter.value = currentValue;
+    }
+
+    async function loadStudents() {
+      const data = await runAdminAction({
+        action: "listStudents",
+        section: sectionFilter.value
+      });
+
+      if (!data || data.status !== "success") return;
+
+      studentList.innerHTML = "";
+
+      if (data.students.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.innerText = "No students found.";
+        studentList.appendChild(empty);
+        return;
+      }
+
+      data.students.forEach((student) => {
+        const card = document.createElement("div");
+        const details = document.createElement("div");
+        const name = document.createElement("div");
+        const meta = document.createElement("div");
+        const points = document.createElement("div");
+
+        card.className = "student-card";
+        name.className = "student-name";
+        meta.className = "student-meta";
+        points.className = "points";
+
+        name.innerText = student.fullName;
+        meta.innerText = student.studentId + " | " + student.section;
+        points.innerText = student.totalPoints + " pts";
+
+        details.appendChild(name);
+        details.appendChild(meta);
+        card.appendChild(details);
+        card.appendChild(points);
+
+        card.addEventListener("click", () => {
+          studentIdInput.value = student.studentId;
+          fullNameInput.value = student.fullName;
+          sectionInput.value = student.section;
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+
+        studentList.appendChild(card);
+      });
+    }
+
+    async function saveStudent(action) {
+      const data = await runAdminAction({
+        action,
+        studentId: studentIdInput.value.trim(),
+        fullName: fullNameInput.value.trim(),
+        section: sectionInput.value.trim()
+      });
+
+      if (data && data.status === "success") {
+        fullNameInput.value = "";
+        sectionInput.value = "";
+        await loadSections();
+        await loadStudents();
+      }
+    }
+
+    addButton.addEventListener("click", () => saveStudent("addStudent"));
+    editButton.addEventListener("click", () => saveStudent("editStudent"));
+    refreshButton.addEventListener("click", async () => {
+      await loadSections();
+      await loadStudents();
+    });
+    sectionFilter.addEventListener("change", loadStudents);
+  </script>
+</body>
+</html>
