@@ -1,6 +1,6 @@
 {
-  "name": "Recitation Admin",
-  "short_name": "Admin",
+  "name": "JR Recitation Admin",
+  "short_name": "JR Admin"
   "description": "Teacher admin app for managing recitation student records.",
   "start_url": "./",
   "display": "standalone",
