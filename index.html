@@ -232,7 +232,8 @@
         <p class="panel-title">Add / Edit Student</p>
         <input type="text" id="studentId" placeholder="Student ID">
         <input type="text" id="fullName" placeholder="Full Name">
-        <input type="text" id="section" placeholder="Section">
+        <input type="text" id="section" list="sectionOptions" placeholder="Section">
+        <datalist id="sectionOptions"></datalist>
         <div class="actions">
           <button id="addButton" type="button">Add Student</button>
           <button id="editButton" class="secondary" type="button">Save Edit</button>
@@ -261,6 +262,7 @@
     const studentIdInput = document.getElementById("studentId");
     const fullNameInput = document.getElementById("fullName");
     const sectionInput = document.getElementById("section");
+    const sectionOptions = document.getElementById("sectionOptions");
     const addButton = document.getElementById("addButton");
     const editButton = document.getElementById("editButton");
     const refreshButton = document.getElementById("refreshButton");
@@ -368,6 +370,13 @@
         option.value = sectionName;
         option.innerText = sectionName;
         sectionFilter.appendChild(option);
+      });
+
+      sectionOptions.innerHTML = "";
+      data.sections.forEach((sectionName) => {
+        const option = document.createElement("option");
+        option.value = sectionName;
+        sectionOptions.appendChild(option);
       });
 
       sectionFilter.value = currentValue;
