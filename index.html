@@ -358,14 +358,22 @@
     }
 
     async function loadSections() {
-      const data = await runAdminAction({ action: "listSections" });
+      const data = await runAdminAction({
+        action: "loadDashboard",
+        section: sectionFilter.value
+      });
 
       if (!data || data.status !== "success") return;
 
+      renderSections(data.sections);
+      renderStudents(data.students);
+    }
+
+    function renderSections(sections) {
       const currentValue = sectionFilter.value;
       sectionFilter.innerHTML = '<option value="">All sections</option>';
 
-      data.sections.forEach((sectionName) => {
+      sections.forEach((sectionName) => {
         const option = document.createElement("option");
         option.value = sectionName;
         option.innerText = sectionName;
@@ -373,7 +381,7 @@
       });
 
       sectionOptions.innerHTML = "";
-      data.sections.forEach((sectionName) => {
+      sections.forEach((sectionName) => {
         const option = document.createElement("option");
         option.value = sectionName;
         sectionOptions.appendChild(option);
@@ -384,15 +392,20 @@
 
     async function loadStudents() {
       const data = await runAdminAction({
-        action: "listStudents",
+        action: "loadDashboard",
         section: sectionFilter.value
       });
 
       if (!data || data.status !== "success") return;
 
+      renderSections(data.sections);
+      renderStudents(data.students);
+    }
+
+    function renderStudents(students) {
       studentList.innerHTML = "";
 
-      if (data.students.length === 0) {
+      if (students.length === 0) {
         const empty = document.createElement("div");
         empty.className = "empty";
         empty.innerText = "No students found.";
@@ -400,7 +413,7 @@
         return;
       }
 
-      data.students.forEach((student) => {
+      students.forEach((student) => {
         const card = document.createElement("div");
         const details = document.createElement("div");
         const name = document.createElement("div");
@@ -443,8 +456,11 @@
       if (data && data.status === "success") {
         fullNameInput.value = "";
         sectionInput.value = "";
-        await loadSections();
-        await loadStudents();
+
+        if (data.sections && data.students) {
+          renderSections(data.sections);
+          renderStudents(data.students);
+        }
       }
     }
 
@@ -452,9 +468,14 @@
     editButton.addEventListener("click", () => saveStudent("editStudent"));
     refreshButton.addEventListener("click", async () => {
       await loadSections();
-      await loadStudents();
     });
     sectionFilter.addEventListener("change", loadStudents);
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js");
+      });
+    }
   </script>
 </body>
 </html>
